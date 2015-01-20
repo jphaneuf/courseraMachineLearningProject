@@ -13,8 +13,24 @@ if(!exists("testDf")) testDf <- read.csv("testFile.csv")
 
 #Explore data to find predictors
 #RF1
-if(!exists("rfExplore")) rfExplore <- train(classe~.,method="rf",data=trainDf)
-#confusionMatrix
+#Subset for testing
+trainIndex<-sample(1:dim(trainDf)[1],size=dim(trainDf)[1]/200,replace=F)
+testtestDf <- trainDf[-trainIndex,]
+testtrainDf <- trainDf[trainIndex,]
+
+#PCA
+numericColumns <- sapply(trainDf,is.numeric)
+trainForPCA <- trainDf[numericColumns]
+preProc <- preProcess(trainForPCA,method="pca",pcaComp=6) #build PCA object
+trainPC <- predict(preProc,trainForPCA) #apply PCA object to new dataFrame
+modelFit <- train(trainDf$classe ~ .,method="rf",data=trainPC)
+
+##ok?
+testForPCA <- testtestDf[numericColumns]
+testPC <- predict(preProc,testForPCA)
+modelOutput <- predict(modelFit,newdata=testPC)
+confusionMatrix(testing$type,predict(modelFit,testPC))
+
 
 #Non-linear data -> Random Forest
 
