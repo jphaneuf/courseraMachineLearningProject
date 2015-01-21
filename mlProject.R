@@ -2,7 +2,6 @@
 
 library(caret)
 library(ggplot2)
-library(reshape2)
 
 trainFileUrl <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
 testFileUrl <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
@@ -13,7 +12,7 @@ if(!exists("testDf")) testDf <- read.table("testFile.csv",header=TRUE,na.string=
 #Data kindly provided by  http://groupware.les.inf.puc-rio.br/har
 
 #Subset training set, since test set doesn't include classe variable
-trainIndex<-sample(1:dim(trainDf)[1],size=dim(trainDf)[1]*0.6,replace=F)
+trainIndex<-sample(1:dim(trainDf)[1],size=dim(trainDf)[1]*0.05,replace=F)
 subTrainDf <- trainDf[trainIndex,] #training df subset from original test set
 subTestDf <- trainDf[-trainIndex,] #testing df subset from original test set
 
@@ -32,18 +31,19 @@ subTrainDf <- subTrainDf[,-badIndex]
 #Remove user name,  timestamps, and 'X'.  X isn't described, but it appears to be some form of
 #Timestamp, and on the training sets almost exactly predicts classe, so a bit of a red herring.
 subTrainDf <- subTrainDf[,-c(1,2,3,4,5)]
-#The magnetometer won't give us any additional information in this case:
+#And then, roll,pitch,yaw should be meaningful data processed from gyro and magnetometer, so remove extraneous
 subTrainDf <- subTrainDf[,-grep("magnet",(names(subTrainDf)))]
+subTrainDf <- subTrainDf[,-grep("gyro",names(subTrainDf))]
 
 #We're going to do a random forest on a fairly small sample, find the best predictors, then redo random forest on the best
 #predictors on the full training set
-modelFit <- train(classe~.,data=subTrainDf,method="gbm")
+modelFit <- train(classe~.,data=subTrainDf,method="rf")
 x<-predict(modelFit,newdata=subTestDf)
 
 ##ok?
 modelOutput <- predict(modelFit,newdata=testDf)
 modelTester <- predict(modelFit2,newdata=subTestDf)
-confusionMatrix(testing$type,predict(modelFit,testPC))
+confusionMatrix(subTestDf$classe,x)
 
 
 #Non-linear data -> Random Forest
