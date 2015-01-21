@@ -1,0 +1,51 @@
+---
+title: "Predicting weight-lifting form using 9-axis sensors"
+author: "Joe Phaneuf"
+date: "01/20/2015"
+output: html_document
+---
+
+##Introduction
+The purpose of this project is to predict the quality of certain weight-lifting exercises, using a suite of sensors.  A group of 6 participants executed these exercises while logging data, and the exercise was then classified with a factor indicating if the exercise was performed correctly or incorrectly.  The raw data will be split into training and testing groups, for model building and validation.  The raw data for this project is provided by Groupware@LES: http://groupware.les.inf.puc-rio.br/har  
+##Data Subsetting  
+Download and read in data, then subset into training dataset and test set.
+```{r cache=TRUE,results='hide'}
+library(caret)
+trainFileUrl <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+if(!file.exists("trainFile.csv")) download.file(trainFileUrl,"trainFile.csv",method="curl")
+if(!exists("trainDf")) trainDf<-read.table("trainFile.csv",header=TRUE,na.strings="",sep=",")
+trainIndex<-sample(1:dim(trainDf)[1],size=dim(trainDf)[1]*0.05,replace=F)
+subTrainDf <- trainDf[trainIndex,] #training df subset from original test set
+subTestDf <- trainDf[-trainIndex,] #testing df subset from original test set
+```
+##Feature Selection
+There are a number of variables that are missing most of their measurements.  These variables will be removed from the training data set.  User names and timestamps will also be removed.  Since roll, pitch and yaw encompass the raw gyroscope and magnetometer readings, the gyro and mag readings will be removed.
+```{r cache=TRUE}
+##Feature Selection
+#view % NAs for each column
+badIndex = vector()
+#Remove columns who have more than 80% NAs.
+for(i in 1:ncol(subTrainDf)){
+  if(sum(is.na(subTrainDf[,i]))/nrow(subTrainDf) > .8){
+    badIndex<-c(badIndex,i)
+  } else if(sum(subTrainDf[,i]=="NA")/nrow(subTrainDf)>.8){
+    badIndex<-c(badIndex,i)
+  }
+}
+subTrainDf <- subTrainDf[,-badIndex]
+#X isn't described, but it appears to be some form of timestamp.
+subTrainDf <- subTrainDf[,-c(1,2,3,4,5)]
+subTrainDf <- subTrainDf[,-grep("magnet",(names(subTrainDf)))]
+subTrainDf <- subTrainDf[,-grep("gyro",names(subTrainDf))]
+```
+##Model Fitting
+As there are a fairly large number of predictors, and not a clear underlying structure, a random forest algorithm is used to construct the model.
+```{r cache=TRUE}
+#modelFit <- train(classe~.,data=subTrainDf,method="rf")
+```
+##Model Validation
+The model can be applied to the test set and compared to the known test set classe variable.
+```{r cache=TRUE}
+#testPredict <-predict(modelFit,newdata=subTestDf)
+#confusionMatrix(subTestDf$classe,x)
+```
