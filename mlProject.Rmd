@@ -42,6 +42,7 @@ subTrainDf <- subTrainDf[,-grep("gyro",names(subTrainDf))]
 #Make sure numeric columns are actually numeric
 ki <- (names(subTrainDf) != "classe") & (names(subTrainDf) != "new_window")
 subTrainDf[,ki] <- data.frame(apply(subTrainDf[,ki],2,as.numeric))
+subTestDf[,names(subTrainDf[,ki])] <-  data.frame(apply(subTestDf[,names(subTrainDf[,ki])],2,as.numeric))
 #Check correlation of remaining numerical variables w/ classe
 #keep variables whose correlation > 10% of the best predictor
 predictorCor <- apply(subTrainDf[,ki],2,function(x) cor(as.numeric(subTrainDf$classe),x))
@@ -56,7 +57,7 @@ As there are a fairly large number of predictors, and not a clear underlying str
 load(file="C:/Users/jphaneuf/Documents/workspace/courseraMachineLearningProject/modelFit.RData") #cached because random forest takes forrrrrevvvvver
 ```
 ##Model Validation
-The model can be applied to the test set and compared to the known test set classe variable with a confusion matrix.
+The model can be applied to the test set and compared to the known test set classe variable for cross-validation.  A confusion matrix is used to compare the two vectors.  The confusion matrix shows the out-of-sample error rate to be 2%. 
 ```{r cache=TRUE, warning=FALSE}
 confusionMatrix(subTestDf$classe,predict(modelFit,subTestDf))
 ```

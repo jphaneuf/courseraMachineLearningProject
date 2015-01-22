@@ -37,14 +37,21 @@ subTrainDf <- subTrainDf[,-grep("gyro",names(subTrainDf))]
 #Make sure numeric columns are actually numeric
 ki <- (names(subTrainDf) != "classe") & (names(subTrainDf) != "new_window")
 subTrainDf[,ki] <- data.frame(apply(subTrainDf[,ki],2,as.numeric))
+subTestDf[,names(subTrainDf[,ki])] <-  data.frame(apply(subTestDf[,names(subTrainDf[,ki])],2,as.numeric))
 #Check correlation of remaining numerical variables w/ classe
 #keep variables whose correlation > 10% of the best predictor
 predictorCor <- apply(subTrainDf[,ki],2,function(x) cor(as.numeric(subTrainDf$classe),x))
 predictors <- predictorCor[predictorCor> .1*max(predictorCor)]
 subTrainDf <- subTrainDf[,c(names(predictors),"classe","new_window")]
 
-modelFit <- train(classe~.,data=subTrainDf,method="rf")
-save(modelFit,file="modelFit.RData")
-#load(file="modelFit.RData")
+#modelFit <- train(classe~.,data=subTrainDf,method="rf")
+#save(modelFit,file="modelFit.RData")
+load(file="modelFit.RData")
 #Validation
 print(confusionMatrix(subTestDf$classe,predict(modelFit,newdata=subTestDf)))
+
+#for kicks, check out what happens if you zero the strongest predictors
+shitDf <- subTestDf
+shitDf$pitch_forearm <- rep(0,nrow(shitDf))
+shitDf$accel_arm_x <- rep(0,nrow(shitDf))
+print(confusionMatrix(subTestDf$classe,predict(modelFit,newdata=shitDf)))
