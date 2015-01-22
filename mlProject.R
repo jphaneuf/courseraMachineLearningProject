@@ -45,18 +45,6 @@ subTrainDf <- subTrainDf[,c(names(predictors),"classe","new_window")]
 
 modelFit <- train(classe~.,data=subTrainDf,method="rf")
 save(modelFit,file="modelFit.RData")
+#load(file="modelFit.RData")
 #Validation
-confusionMatrix(subTestDf$classe,predict(modelFit,newdata=subTestDf))
-
-
-#Non-linear data -> Random Forest
-
-#Build Random Forest Model
-#Does the submission build a machine learning algorithm to predict activity quality from activity monitors?
-
-
-#Do the authors describe what they expect the out of sample error to be and estimate 
-#the error appropriately with cross-validation?
-
-#Github pages
-
+print(confusionMatrix(subTestDf$classe,predict(modelFit,newdata=subTestDf)))
