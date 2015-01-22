@@ -55,3 +55,22 @@ shitDf <- subTestDf
 shitDf$pitch_forearm <- rep(0,nrow(shitDf))
 shitDf$accel_arm_x <- rep(0,nrow(shitDf))
 print(confusionMatrix(subTestDf$classe,predict(modelFit,newdata=shitDf)))
+
+##Now apply to testDf (20 samples)
+answerVector <- as.character(predict(modelFit,testDf))
+#create vector
+#answers <- c("A","B","C","D","E")
+#answerVector <- sample(answers,20,replace=TRUE)
+#write files
+pml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("./submit/problem_id_",i,".txt")
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+pml_write_files(answerVector)
+
+
+
+

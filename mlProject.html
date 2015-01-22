@@ -67,8 +67,10 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <h2>Data Subsetting</h2>
 <p>Download and read in data, then subset into training dataset (60%) and test set (40%).</p>
 <pre class="r"><code>library(caret)
-library(randomForest)
-trainFileUrl &lt;- &quot;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv&quot;
+library(randomForest)</code></pre>
+<pre><code>## randomForest 4.6-10
+## Type rfNews() to see new features/changes/bug fixes.</code></pre>
+<pre class="r"><code>trainFileUrl &lt;- &quot;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv&quot;
 if(!file.exists(&quot;trainFile.csv&quot;)) download.file(trainFileUrl,&quot;trainFile.csv&quot;,method=&quot;curl&quot;)
 if(!exists(&quot;trainDf&quot;)) trainDf&lt;-read.table(&quot;trainFile.csv&quot;,header=TRUE,na.strings=&quot;&quot;,sep=&quot;,&quot;)
 trainIndex&lt;-sample(1:dim(trainDf)[1],size=dim(trainDf)[1]*0.6,replace=F)
@@ -109,43 +111,43 @@ subTrainDf &lt;- subTrainDf[,c(names(predictors),&quot;classe&quot;,&quot;new_wi
 <p>As there are a fairly large number of predictors, and not a clear underlying structure, a random forest algorithm is used to construct the model.</p>
 <pre class="r"><code>#modelFit &lt;- train(classe~.,data=subTrainDf,method=&quot;rf&quot;)
 #save(modelFit,file=&quot;modelFit.RData&quot;)
-load(file=&quot;C:/Users/jphaneuf/Documents/workspace/courseraMachineLearningProject/modelFit.RData&quot;) #cached because random forest takes forrrrrevvvvver</code></pre>
+load(file=&quot;modelFit.RData&quot;) #cached because random forest takes forrrrrevvvvver</code></pre>
 </div>
 <div id="model-validation" class="section level2">
 <h2>Model Validation</h2>
-<p>The model can be applied to the test set and compared to the known test set classe variable for cross-validation. A confusion matrix is used to compare the two vectors. The confusion matrix shows the out-of-sample error rate to be 2%.</p>
+<p>The model can be applied to the test set and compared to the known test set classe variable for cross-validation. A confusion matrix is used to compare the two vectors. The confusion matrix shows the out-of-sample error rate to be 2%, and with 95% confidence predicts the accuracy of this model to be between 97.68% and 98.31%.</p>
 <pre class="r"><code>confusionMatrix(subTestDf$classe,predict(modelFit,subTestDf))</code></pre>
 <pre><code>## Confusion Matrix and Statistics
 ## 
 ##           Reference
 ## Prediction    A    B    C    D    E
-##          A 2207   21    8   41    0
-##          B   98 1317   52   37    5
-##          C    0   96 1254   17    2
-##          D   13   25  116 1101   15
-##          E    2   38    8   44 1332
+##          A 2201    9   11   10    2
+##          B   12 1490   31    6    6
+##          C    5   11 1297   12    0
+##          D    6    3   17 1249    3
+##          E    2    6    2    2 1456
 ## 
 ## Overall Statistics
 ##                                           
-##                Accuracy : 0.9187          
-##                  95% CI : (0.9124, 0.9247)
-##     No Information Rate : 0.2956          
-##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+##                Accuracy : 0.9801          
+##                  95% CI : (0.9768, 0.9831)
+##     No Information Rate : 0.2836          
+##     P-Value [Acc &gt; NIR] : &lt; 2e-16         
 ##                                           
-##                   Kappa : 0.8969          
-##  Mcnemar's Test P-Value : &lt; 2.2e-16       
+##                   Kappa : 0.9749          
+##  Mcnemar's Test P-Value : 0.06871         
 ## 
 ## Statistics by Class:
 ## 
 ##                      Class: A Class: B Class: C Class: D Class: E
-## Sensitivity            0.9513   0.8798   0.8720   0.8879   0.9838
-## Specificity            0.9873   0.9698   0.9821   0.9744   0.9858
-## Pos Pred Value         0.9693   0.8728   0.9160   0.8669   0.9354
-## Neg Pred Value         0.9797   0.9716   0.9716   0.9789   0.9966
-## Prevalence             0.2956   0.1907   0.1832   0.1580   0.1725
-## Detection Rate         0.2812   0.1678   0.1598   0.1403   0.1697
-## Detection Prevalence   0.2901   0.1923   0.1744   0.1618   0.1814
-## Balanced Accuracy      0.9693   0.9248   0.9271   0.9312   0.9848</code></pre>
+## Sensitivity            0.9888   0.9809   0.9551   0.9765   0.9925
+## Specificity            0.9943   0.9913   0.9957   0.9956   0.9981
+## Pos Pred Value         0.9857   0.9644   0.9789   0.9773   0.9918
+## Neg Pred Value         0.9955   0.9954   0.9906   0.9954   0.9983
+## Prevalence             0.2836   0.1935   0.1730   0.1630   0.1869
+## Detection Rate         0.2804   0.1898   0.1652   0.1591   0.1855
+## Detection Prevalence   0.2845   0.1968   0.1688   0.1628   0.1870
+## Balanced Accuracy      0.9915   0.9861   0.9754   0.9861   0.9953</code></pre>
 </div>
 
 
