@@ -12,7 +12,7 @@ if(!exists("testDf")) testDf <- read.table("testFile.csv",header=TRUE,na.string=
 #Data kindly provided by  http://groupware.les.inf.puc-rio.br/har
 
 #Subset training set, since test set doesn't include classe variable
-trainIndex<-sample(1:dim(trainDf)[1],size=dim(trainDf)[1]*0.05,replace=F)
+trainIndex<-sample(1:dim(trainDf)[1],size=dim(trainDf)[1]*.6,replace=F)
 subTrainDf <- trainDf[trainIndex,] #training df subset from original test set
 subTestDf <- trainDf[-trainIndex,] #testing df subset from original test set
 
@@ -34,16 +34,13 @@ subTrainDf <- subTrainDf[,-c(1,2,3,4,5)]
 #And then, roll,pitch,yaw should be meaningful data processed from gyro and magnetometer, so remove extraneous
 subTrainDf <- subTrainDf[,-grep("magnet",(names(subTrainDf)))]
 subTrainDf <- subTrainDf[,-grep("gyro",names(subTrainDf))]
-
-#We're going to do a random forest on a fairly small sample, find the best predictors, then redo random forest on the best
-#predictors on the full training set
+#Make sure numeric columns are actually numeric
+ki <- (names(subTrainDf) != "classe") & (names(subTrainDf) != "new_window")
+subTrainDf[,ki] <- data.frame(apply(subTrainDf[,ki],2,as.numeric))
 modelFit <- train(classe~.,data=subTrainDf,method="rf")
-x<-predict(modelFit,newdata=subTestDf)
-
-##ok?
-modelOutput <- predict(modelFit,newdata=testDf)
-modelTester <- predict(modelFit2,newdata=subTestDf)
-confusionMatrix(subTestDf$classe,x)
+save(modelFit,file="modelFit.RData")
+#Validation
+confusionMatrix(subTestDf$classe,predict(modelFit,newdata=subTestDf))
 
 
 #Non-linear data -> Random Forest
