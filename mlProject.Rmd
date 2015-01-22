@@ -19,7 +19,7 @@ subTrainDf <- trainDf[trainIndex,] #training df subset from original test set
 subTestDf <- trainDf[-trainIndex,] #testing df subset from original test set
 ```
 ##Feature Selection
-There are a number of variables that are missing most of their measurements.  These variables will be removed from the training data set.  User names and timestamps will also be removed.  Since roll, pitch and yaw encompass the raw gyroscope and magnetometer readings, the gyro and mag readings will be removed.
+There are a number of variables that are missing most of their measurements.  These variables will be removed from the training data set.  User names and timestamps will also be removed.  Since roll, pitch and yaw encompass the raw gyroscope and magnetometer readings, the gyro and mag readings will be removed.  After that, the numeric predictors will be correlated with classe, and the variables with correlations greater than 10% of the highest correlation value will be kept.
 ```{r cache=TRUE}
 ##Feature Selection
 #view % NAs for each column
@@ -37,11 +37,21 @@ subTrainDf <- subTrainDf[,-badIndex]
 subTrainDf <- subTrainDf[,-c(1,2,3,4,5)]
 subTrainDf <- subTrainDf[,-grep("magnet",(names(subTrainDf)))]
 subTrainDf <- subTrainDf[,-grep("gyro",names(subTrainDf))]
+#Make sure numeric columns are actually numeric
+ki <- (names(subTrainDf) != "classe") & (names(subTrainDf) != "new_window")
+subTrainDf[,ki] <- data.frame(apply(subTrainDf[,ki],2,as.numeric))
+#Check correlation of remaining numerical variables w/ classe
+#keep variables whose correlation > 10% of the best predictor
+predictorCor <- apply(subTrainDf[,ki],2,function(x) cor(as.numeric(subTrainDf$classe),x))
+predictors <- predictorCor[predictorCor> .1*max(predictorCor)]
+subTrainDf <- subTrainDf[,c(names(predictors),"classe","new_window")]
 ```
 ##Model Fitting
 As there are a fairly large number of predictors, and not a clear underlying structure, a random forest algorithm is used to construct the model.
 ```{r cache=TRUE}
 #modelFit <- train(classe~.,data=subTrainDf,method="rf")
+#save(modelFit,file="modelFit.RData")
+load("file=modelFit.RData")
 ```
 ##Model Validation
 The model can be applied to the test set and compared to the known test set classe variable.

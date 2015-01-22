@@ -37,6 +37,12 @@ subTrainDf <- subTrainDf[,-grep("gyro",names(subTrainDf))]
 #Make sure numeric columns are actually numeric
 ki <- (names(subTrainDf) != "classe") & (names(subTrainDf) != "new_window")
 subTrainDf[,ki] <- data.frame(apply(subTrainDf[,ki],2,as.numeric))
+#Check correlation of remaining numerical variables w/ classe
+#keep variables whose correlation > 10% of the best predictor
+predictorCor <- apply(subTrainDf[,ki],2,function(x) cor(as.numeric(subTrainDf$classe),x))
+predictors <- predictorCor[predictorCor> .1*max(predictorCor)]
+subTrainDf <- subTrainDf[,c(names(predictors),"classe","new_window")]
+
 modelFit <- train(classe~.,data=subTrainDf,method="rf")
 save(modelFit,file="modelFit.RData")
 #Validation
