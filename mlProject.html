@@ -66,11 +66,10 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <div id="data-subsetting" class="section level2">
 <h2>Data Subsetting</h2>
 <p>Download and read in data, then subset into training dataset (60%) and test set (40%).</p>
-<pre class="r"><code>library(caret)
-library(randomForest)</code></pre>
-<pre><code>## randomForest 4.6-10
-## Type rfNews() to see new features/changes/bug fixes.</code></pre>
-<pre class="r"><code>trainFileUrl &lt;- &quot;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv&quot;
+<pre class="r"><code>suppressMessages(library(caret))
+suppressMessages(library(randomForest))
+set.seed(6)
+trainFileUrl &lt;- &quot;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv&quot;
 if(!file.exists(&quot;trainFile.csv&quot;)) download.file(trainFileUrl,&quot;trainFile.csv&quot;,method=&quot;curl&quot;)
 if(!exists(&quot;trainDf&quot;)) trainDf&lt;-read.table(&quot;trainFile.csv&quot;,header=TRUE,na.strings=&quot;&quot;,sep=&quot;,&quot;)
 trainIndex&lt;-sample(1:dim(trainDf)[1],size=dim(trainDf)[1]*0.6,replace=F)
@@ -79,7 +78,7 @@ subTestDf &lt;- trainDf[-trainIndex,] #testing df subset from original test set<
 </div>
 <div id="feature-selection" class="section level2">
 <h2>Feature Selection</h2>
-<p>There are a number of variables that are missing most of their measurements. These variables will be removed from the training data set. User names and timestamps will also be removed. Since roll, pitch and yaw encompass the raw gyroscope and magnetometer readings, the gyro and mag readings will be removed. After that, the numeric predictors will be correlated with classe, and the variables with correlations greater than 10% of the highest correlation value will be kept.</p>
+<p>There are a number of variables that are missing most of their measurements. These variables will be removed from the training data set. User names and timestamps will also be removed. Since roll, pitch and yaw encompass the raw gyroscope and magnetometer readings, the gyro and mag readings will be removed. After that, the numeric predictors will be correlated with classe, and the variables with correlations greater than 10% of the highest correlation value will be kept. This results in set of 14 predictors.</p>
 <pre class="r"><code>##Feature Selection
 #view % NAs for each column
 badIndex = vector()
@@ -111,43 +110,64 @@ subTrainDf &lt;- subTrainDf[,c(names(predictors),&quot;classe&quot;,&quot;new_wi
 <p>As there are a fairly large number of predictors, and not a clear underlying structure, a random forest algorithm is used to construct the model.</p>
 <pre class="r"><code>#modelFit &lt;- train(classe~.,data=subTrainDf,method=&quot;rf&quot;)
 #save(modelFit,file=&quot;modelFit.RData&quot;)
-load(file=&quot;modelFit.RData&quot;) #cached because random forest takes forrrrrevvvvver</code></pre>
+load(file=&quot;modelFit.RData&quot;) #cached because random forest takes forrrrrevvvvver
+print(modelFit)</code></pre>
+<pre><code>## Random Forest 
+## 
+## 11773 samples
+##    13 predictors
+##     5 classes: 'A', 'B', 'C', 'D', 'E' 
+## 
+## No pre-processing
+## Resampling: Bootstrapped (25 reps) 
+## 
+## Summary of sample sizes: 11773, 11773, 11773, 11773, 11773, 11773, ... 
+## 
+## Resampling results across tuning parameters:
+## 
+##   mtry  Accuracy   Kappa      Accuracy SD  Kappa SD   
+##    2    0.9422032  0.9268753  0.003423391  0.004355761
+##    7    0.9422837  0.9269903  0.003447358  0.004371388
+##   13    0.9321325  0.9141555  0.004524255  0.005742897
+## 
+## Accuracy was used to select the optimal model using  the largest value.
+## The final value used for the model was mtry = 7.</code></pre>
 </div>
 <div id="model-validation" class="section level2">
 <h2>Model Validation</h2>
-<p>The model can be applied to the test set and compared to the known test set classe variable for cross-validation. A confusion matrix is used to compare the two vectors. The confusion matrix shows the out-of-sample error rate to be 2%, and with 95% confidence predicts the accuracy of this model to be between 97.68% and 98.31%.</p>
+<p>The model fit with an an in-sample error rate of ~6%. The model can be applied to the test set and compared to the known test set classe variable for cross-validation. A confusion matrix is used to compare the two vectors. The confusion matrix shows the out-of-sample error rate to be ~2%, and with 95% confidence predicts the accuracy of this model to be between 97.6% and 98.2%.</p>
 <pre class="r"><code>confusionMatrix(subTestDf$classe,predict(modelFit,subTestDf))</code></pre>
 <pre><code>## Confusion Matrix and Statistics
 ## 
 ##           Reference
 ## Prediction    A    B    C    D    E
-##          A 2201    9   11   10    2
-##          B   12 1490   31    6    6
-##          C    5   11 1297   12    0
-##          D    6    3   17 1249    3
-##          E    2    6    2    2 1456
+##          A 2212    6   14   11    4
+##          B   19 1465   33    1    4
+##          C    2   12 1337   14    0
+##          D    6    3    8 1263    7
+##          E    1    8    4    5 1410
 ## 
 ## Overall Statistics
-##                                           
-##                Accuracy : 0.9801          
-##                  95% CI : (0.9768, 0.9831)
-##     No Information Rate : 0.2836          
-##     P-Value [Acc &gt; NIR] : &lt; 2e-16         
-##                                           
-##                   Kappa : 0.9749          
-##  Mcnemar's Test P-Value : 0.06871         
+##                                          
+##                Accuracy : 0.9794         
+##                  95% CI : (0.976, 0.9824)
+##     No Information Rate : 0.2854         
+##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16      
+##                                          
+##                   Kappa : 0.9739         
+##  Mcnemar's Test P-Value : 5.366e-05      
 ## 
 ## Statistics by Class:
 ## 
 ##                      Class: A Class: B Class: C Class: D Class: E
-## Sensitivity            0.9888   0.9809   0.9551   0.9765   0.9925
-## Specificity            0.9943   0.9913   0.9957   0.9956   0.9981
-## Pos Pred Value         0.9857   0.9644   0.9789   0.9773   0.9918
-## Neg Pred Value         0.9955   0.9954   0.9906   0.9954   0.9983
-## Prevalence             0.2836   0.1935   0.1730   0.1630   0.1869
-## Detection Rate         0.2804   0.1898   0.1652   0.1591   0.1855
-## Detection Prevalence   0.2845   0.1968   0.1688   0.1628   0.1870
-## Balanced Accuracy      0.9915   0.9861   0.9754   0.9861   0.9953</code></pre>
+## Sensitivity            0.9875   0.9806   0.9577   0.9760   0.9895
+## Specificity            0.9938   0.9910   0.9957   0.9963   0.9972
+## Pos Pred Value         0.9844   0.9625   0.9795   0.9814   0.9874
+## Neg Pred Value         0.9950   0.9954   0.9909   0.9953   0.9977
+## Prevalence             0.2854   0.1903   0.1779   0.1649   0.1816
+## Detection Rate         0.2818   0.1866   0.1703   0.1609   0.1796
+## Detection Prevalence   0.2863   0.1939   0.1739   0.1640   0.1819
+## Balanced Accuracy      0.9906   0.9858   0.9767   0.9862   0.9933</code></pre>
 </div>
 
 

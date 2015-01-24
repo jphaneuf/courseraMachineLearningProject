@@ -11,8 +11,9 @@ The purpose of this project is to predict the quality of certain weight-lifting 
 ##Data Subsetting  
 Download and read in data, then subset into training dataset (60%) and test set (40%).
 ```{r cache=TRUE,results='hide',warning=FALSE}
-library(caret)
-library(randomForest)
+suppressMessages(library(caret))
+suppressMessages(library(randomForest))
+set.seed(6)
 trainFileUrl <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
 if(!file.exists("trainFile.csv")) download.file(trainFileUrl,"trainFile.csv",method="curl")
 if(!exists("trainDf")) trainDf<-read.table("trainFile.csv",header=TRUE,na.strings="",sep=",")
@@ -21,7 +22,7 @@ subTrainDf <- trainDf[trainIndex,] #training df subset from original test set
 subTestDf <- trainDf[-trainIndex,] #testing df subset from original test set
 ```
 ##Feature Selection
-There are a number of variables that are missing most of their measurements.  These variables will be removed from the training data set.  User names and timestamps will also be removed.  Since roll, pitch and yaw encompass the raw gyroscope and magnetometer readings, the gyro and mag readings will be removed.  After that, the numeric predictors will be correlated with classe, and the variables with correlations greater than 10% of the highest correlation value will be kept.
+There are a number of variables that are missing most of their measurements.  These variables will be removed from the training data set.  User names and timestamps will also be removed.  Since roll, pitch and yaw encompass the raw gyroscope and magnetometer readings, the gyro and mag readings will be removed.  After that, the numeric predictors will be correlated with classe, and the variables with correlations greater than 10% of the highest correlation value will be kept.  This results in set of 14 predictors.
 ```{r cache=TRUE}
 ##Feature Selection
 #view % NAs for each column
@@ -55,9 +56,10 @@ As there are a fairly large number of predictors, and not a clear underlying str
 #modelFit <- train(classe~.,data=subTrainDf,method="rf")
 #save(modelFit,file="modelFit.RData")
 load(file="modelFit.RData") #cached because random forest takes forrrrrevvvvver
+print(modelFit)
 ```
 ##Model Validation
-The model can be applied to the test set and compared to the known test set classe variable for cross-validation.  A confusion matrix is used to compare the two vectors.  The confusion matrix shows the out-of-sample error rate to be 2%, and with 95% confidence predicts the accuracy of this model to be between 97.68% and 98.31%.
+The model fit with an an in-sample error rate of ~6%.  The model can be applied to the test set and compared to the known test set classe variable for cross-validation.  A confusion matrix is used to compare the two vectors.  The confusion matrix shows the out-of-sample error rate to be ~2%, and with 95% confidence predicts the accuracy of this model to be between 97.6% and 98.2%.
 ```{r cache=TRUE, warning=FALSE}
 confusionMatrix(subTestDf$classe,predict(modelFit,subTestDf))
 ```
